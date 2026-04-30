@@ -52,7 +52,7 @@ logs/
 # ── Non-code folders ──────────────────────────────────────────────────────────
 documentation/
 documentation.zip
-Interviews/
+# Interviews/
 Literature Review/
 
 # ── IDE and OS ────────────────────────────────────────────────────────────────
