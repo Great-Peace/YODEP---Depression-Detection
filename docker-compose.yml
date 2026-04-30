@@ -1,0 +1,91 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# YODEP Docker Compose
+#
+# Usage:
+#   docker compose up yodep-main           # run main experiments
+#   docker compose run --rm yodep-verify   # verify YODEP file structure
+#   docker compose run --rm yodep-extract  # pre-extract all features
+# ─────────────────────────────────────────────────────────────────────────────
+
+x-common: &common
+  image: yodep:latest
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      CUDA_VERSION: "12.4.0"
+      PYTHON_VERSION: "3.10"
+  environment:
+    # Override these at runtime: docker compose run -e HF_TOKEN=xxx ...
+    HF_HOME: /app/.cache/huggingface
+    TRANSFORMERS_CACHE: /app/.cache/huggingface
+    CUBLAS_WORKSPACE_CONFIG: ":4096:8"
+  volumes:
+    # ── data volumes ──────────────────────────────────────────────────────
+    # Mount your YODEP .wav files here:
+    - ./data/yodep/raw:/app/data/yodep/raw:ro
+    # Mount DAIC-WOZ here (optional):
+    - ./data/daic_woz/raw:/app/data/daic_woz/raw:ro
+    # ── persistent outputs ────────────────────────────────────────────────
+    - ./results:/app/results
+    - ./logs:/app/logs
+    # ── caches (persist between runs for speed) ───────────────────────────
+    - yodep-hf-cache:/app/.cache/huggingface
+    - yodep-feature-cache:/app/.cache/features
+    - yodep-exp-checkpoints:/app/.cache/exp_ckpts
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: 1           # single GPU is sufficient (sub-1B models)
+            capabilities: [gpu]
+  restart: "no"
+
+services:
+
+  # ── Main experiment run (all conditions, LOSO CV) ─────────────────────────
+  yodep-main:
+    <<: *common
+    command: ["experiments/run_yodep_main.py"]
+    profiles: [main]
+
+  # ── DAIC-WOZ validation ───────────────────────────────────────────────────
+  yodep-daic:
+    <<: *common
+    command: ["experiments/run_daic_validation.py"]
+    profiles: [daic]
+
+  # ── Cross-lingual transfer ────────────────────────────────────────────────
+  yodep-transfer:
+    <<: *common
+    command: ["experiments/run_transfer.py"]
+    profiles: [transfer]
+
+  # ── Run everything ────────────────────────────────────────────────────────
+  yodep-all:
+    <<: *common
+    command: ["experiments/run_all.py", "--skip-daic"]
+    profiles: [all]
+
+  # ── Pre-extract features only ─────────────────────────────────────────────
+  yodep-extract:
+    <<: *common
+    command: ["scripts/extract_all_features.py", "--dataset", "yodep"]
+    profiles: [extract]
+
+  # ── Verify YODEP file structure ───────────────────────────────────────────
+  yodep-verify:
+    <<: *common
+    command: ["scripts/verify_yodep.py", "--verbose"]
+    profiles: [verify]
+
+volumes:
+  yodep-hf-cache:
+    driver: local
+  yodep-feature-cache:
+    driver: local
+  yodep-exp-checkpoints:
+    driver: local

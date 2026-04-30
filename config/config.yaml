@@ -1,0 +1,87 @@
+project:
+  name: "YODEP"
+  version: "1.0"
+  random_seed: 42
+
+paths:
+  daic_woz_raw: "data/daic_woz/raw"
+  daic_woz_processed: "data/daic_woz/processed"
+  daic_woz_features: "data/daic_woz/features"
+  yodep_raw: "data/yodep/raw"
+  yodep_processed: "data/yodep/processed"
+  yodep_features: "data/yodep/features"
+  sentences: "data/sentences.json"
+  results: "results"
+  cache: ".cache"
+  logs: "logs"
+
+audio:
+  sample_rate: 16000
+  min_duration_seconds: 1.5
+  silence_threshold_db: -40
+  trim_silence: true
+
+features:
+  prosodic:
+    opensmile_feature_set: "eGeMAPSv02"
+    f0_columns:
+      - "F0semitoneFrom27.5Hz_sma3nz_amean"
+      - "F0semitoneFrom27.5Hz_sma3nz_stddevNorm"
+      - "F0semitoneFrom27.5Hz_sma3nz_percentile20.0"
+      - "F0semitoneFrom27.5Hz_sma3nz_percentile80.0"
+      - "F0semitoneFrom27.5Hz_sma3nz_pctlrange0-2"
+      - "F0semitoneFrom27.5Hz_sma3nz_meanRisingSlope"
+      - "F0semitoneFrom27.5Hz_sma3nz_stddevRisingSlope"
+  spectral:
+    n_mfcc: 13
+    include_delta: true
+    include_delta2: true
+  glottal:
+    voiced_only: true
+    min_voiced_duration_seconds: 0.5
+
+models:
+  bert: "bert-base-uncased"
+  hubert: "facebook/hubert-base-ls960"
+  wavlm: "microsoft/wavlm-base"
+
+svm:
+  C: [0.01, 0.1, 1, 10, 100]
+  gamma: ["scale", "auto", 0.001, 0.01]
+  kernel: ["rbf", "linear"]
+  cv_folds: 5
+
+logistic:
+  C: [0.01, 0.1, 1, 10, 100]
+  max_iter: 1000
+
+random_forest:
+  n_estimators: [100, 200, 500]
+  max_depth: [null, 5, 10, 20]
+  cv_folds: 5
+
+mlp:
+  hidden_dims: [256, 64]
+  dropout: 0.3
+  learning_rate: 0.001
+  epochs: 100
+  batch_size: 16
+  early_stopping_patience: 15
+
+evaluation:
+  bootstrap_iterations: 1000
+  confidence_level: 0.95
+  primary_metric: "f1_macro"
+
+daic_woz:
+  phq8_threshold: 10
+  train_split: "train"
+  dev_split: "dev"
+
+yodep:
+  languages: ["EN", "YO"]
+  conditions: ["NORMAL", "DEPRESSED"]
+  label_map:
+    NORMAL: 0
+    DEPRESSED: 1
+  loso: true

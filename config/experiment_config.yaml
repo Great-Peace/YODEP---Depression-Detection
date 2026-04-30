@@ -1,0 +1,121 @@
+# Per-condition and per-experiment settings for YODEP
+
+conditions:
+  C1:
+    name: "Full Features"
+    description: "Prosodic (F0 stats) + Spectral (MFCCs) + Glottal (jitter, shimmer, HNR, CPPS)"
+    include_prosodic: true
+    include_spectral: true
+    include_glottal: true
+    include_ssl: false
+    include_text: false
+
+  C2:
+    name: "F0-Ablated"
+    description: "Spectral (MFCCs) + Glottal only — all F0 and prosodic features strictly removed"
+    include_prosodic: false
+    include_spectral: true
+    include_glottal: true
+    include_ssl: false
+    include_text: false
+    # Hard constraint enforced programmatically — see pipeline.py
+    f0_ablated: true
+
+  C3:
+    name: "Glottal Only"
+    description: "Jitter, shimmer, HNR, CPPS only — language-agnostic lower bound"
+    include_prosodic: false
+    include_spectral: false
+    include_glottal: true
+    include_ssl: false
+    include_text: false
+
+  C4:
+    name: "SSL Embeddings (HuBERT)"
+    description: "HuBERT-base mean-pooled frame embeddings (768-dim)"
+    include_prosodic: false
+    include_spectral: false
+    include_glottal: false
+    include_ssl: true
+    ssl_model: "hubert"
+    include_text: false
+
+  C4_WavLM:
+    name: "SSL Embeddings (WavLM)"
+    description: "WavLM-base mean-pooled frame embeddings (768-dim)"
+    include_prosodic: false
+    include_spectral: false
+    include_glottal: false
+    include_ssl: true
+    ssl_model: "wavlm"
+    include_text: false
+
+multimodal_conditions:
+  C1_MM:
+    base_condition: "C1"
+    include_text: true
+    fusion: "concatenate"
+
+  C2_MM:
+    base_condition: "C2"
+    include_text: true
+    fusion: "concatenate"
+    f0_ablated: true
+
+  C3_MM:
+    base_condition: "C3"
+    include_text: true
+    fusion: "concatenate"
+
+  C4_MM:
+    base_condition: "C4"
+    include_text: true
+    fusion: "concatenate"
+
+transfer_experiments:
+  C1_XFER:
+    base_condition: "C1"
+    train_language: "EN"
+    test_language: "YO"
+
+  C2_XFER:
+    base_condition: "C2"
+    train_language: "EN"
+    test_language: "YO"
+    f0_ablated: true
+
+  C3_XFER:
+    base_condition: "C3"
+    train_language: "EN"
+    test_language: "YO"
+
+classifiers:
+  handcrafted:  # C1, C2, C3
+    - "svm"
+    - "logistic"
+    - "random_forest"
+
+  ssl:  # C4
+    - "svm"
+    - "mlp"
+
+  multimodal:  # C1-MM through C4-MM
+    - "svm"
+    - "mlp"
+
+experiments:
+  daic_validation:
+    conditions: ["C1", "C3"]
+    classifiers: ["svm"]
+    dataset: "daic_woz"
+
+  yodep_main:
+    conditions: ["C1", "C2", "C3", "C4", "C4_WavLM"]
+    multimodal_conditions: ["C1_MM", "C2_MM", "C3_MM", "C4_MM"]
+    dataset: "yodep"
+    evaluation: "loso"
+
+  transfer:
+    conditions: ["C1_XFER", "C2_XFER", "C3_XFER"]
+    classifiers: ["svm"]
+    dataset: "yodep"

@@ -1,0 +1,75 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Raw audio — IRB / privacy (never commit) ──────────────────────────────────
+data/daic_woz/raw/
+data/yodep/raw/
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.ogg
+
+# ── Extracted features (large numpy arrays, regenerable) ──────────────────────
+data/yodep/features/
+data/daic_woz/features/
+*.npy
+*.npy.gz
+*.pkl
+
+# ── Keep directory scaffolding ─────────────────────────────────────────────────
+!data/yodep/features/.gitkeep
+!data/yodep/processed/.gitkeep
+!data/daic_woz/features/.gitkeep
+!data/daic_woz/processed/.gitkeep
+
+# ── Model checkpoints (large binaries) ────────────────────────────────────────
+*.pt
+*.pth
+*.bin
+checkpoints/
+
+# ── Results (generated — not source code) ─────────────────────────────────────
+results/
+
+# ── Cache ─────────────────────────────────────────────────────────────────────
+.cache/
+logs/
+.pytest_cache/
+~/.cache/huggingface/
+
+# ── Non-code folders ──────────────────────────────────────────────────────────
+documentation/
+documentation.zip
+Interviews/
+Literature Review/
+
+# ── IDE and OS ────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ── Claude Code session data ──────────────────────────────────────────────────
+.claude/
+
+# ── Jupyter checkpoints ───────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Sensitive ─────────────────────────────────────────────────────────────────
+*.env
+.env.*
+credentials.*
+secrets.*
